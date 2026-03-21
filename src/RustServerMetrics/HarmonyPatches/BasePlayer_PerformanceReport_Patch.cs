@@ -18,7 +18,7 @@ namespace RustServerMetrics.HarmonyPatches
             List<CodeInstruction> retList = new List<CodeInstruction>(originalInstructions);
 
             var indexedMethodInfo = FindMethod(typeof(JsonConvert), nameof(JsonConvert.DeserializeObject), BindingFlags.Static | BindingFlags.Public, new Type[] { typeof(string) }, new Type[] { typeof(ClientPerformanceReport) });
-            var insertionIndex = retList.FindIndex(x => x.opcode == OpCodes.Call && x.operand == indexedMethodInfo);
+            var insertionIndex = retList.FindIndex(x => x.opcode == OpCodes.Call && x.operand is MethodInfo method && method == indexedMethodInfo);
             if (insertionIndex < 0) throw new Exception("Failed to find the insertion index for BasePlayer_PerformanceReport_Patch");
             insertionIndex += 2;
 

@@ -30,13 +30,16 @@ internal class RPCServer_Attribute_Method_Patch
     {
         var baseNetworkableType = typeof(BaseNetworkable);
         var baseNetworkableAssembly = baseNetworkableType.Assembly;
-        var typesToScan = new Stack<Type>(baseNetworkableAssembly.GetTypes());
+        var typesToScan = new List<Type>(baseNetworkableAssembly.GetTypes());
 
-        while (typesToScan.TryPop(out var type))
+        while (typesToScan.Count > 0)
         {
+            var type = typesToScan[typesToScan.Count - 1];
+            typesToScan.RemoveAt(typesToScan.Count - 1);
+
             foreach (var subType in type.GetNestedTypes())
             {
-                typesToScan.Push(subType);
+                typesToScan.Add(subType);
             }
                 
             foreach (var method in type.GetMethods())

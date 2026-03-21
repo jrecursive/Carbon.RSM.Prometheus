@@ -112,7 +112,7 @@ namespace RustServerMetrics
             };
             yield return request.SendWebRequest();
 
-            if (request.isNetworkError)
+            if (request.result == UnityWebRequest.Result.ConnectionError)
             {
                 if (_attempt >= 2)
                 {
@@ -134,7 +134,7 @@ namespace RustServerMetrics
                 yield break;
             }
 
-            if (request.isHttpError)
+            if (request.result == UnityWebRequest.Result.ProtocolError || request.result == UnityWebRequest.Result.DataProcessingError)
             {
                 if (_throttleHttpErrorMessages)
                 {

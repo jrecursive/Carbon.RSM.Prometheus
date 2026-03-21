@@ -29,14 +29,17 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         public static IEnumerable<MethodBase> TargetMethods(Harmony harmonyInstance)
         {
             var assemblyCSharp = typeof(BaseNetworkable).Assembly;
-            Stack<Type> typesToScan = new Stack<Type>(assemblyCSharp.GetTypes());
+            var typesToScan = new List<Type>(assemblyCSharp.GetTypes());
             HashSet<string> yielded = new ();
             
-            while (typesToScan.TryPop(out Type type))
+            while (typesToScan.Count > 0)
             {
+                var type = typesToScan[typesToScan.Count - 1];
+                typesToScan.RemoveAt(typesToScan.Count - 1);
+
                 var subTypes = type.GetNestedTypes();
                 foreach (var t in subTypes)
-                    typesToScan.Push(t);
+                    typesToScan.Add(t);
 
                 if (type.BaseType == null || !type.BaseType.Name.Contains("ObjectWorkQueue"))
                     continue;

@@ -102,7 +102,7 @@ namespace RustServerMetrics
             }
         }
 
-        protected override void Awake()
+        public override void Awake()
         {
             base.Awake();
             _reportUploader = gameObject.AddComponent<ReportUploader>();
@@ -252,7 +252,7 @@ namespace RustServerMetrics
                 else
                 {
                     _perfReportDelayCounter[player.userID] = 0;
-                    player.ClientRPCPlayer(null, player, "GetPerformanceReport", "legacy", _performanceReport_RequestId);
+                    player.ClientRPC(RpcTarget.Player("GetPerformanceReport", player), "legacy", _performanceReport_RequestId);
                 }
             }
 

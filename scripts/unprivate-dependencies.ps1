@@ -43,7 +43,8 @@ $filesToCopy = New-Object Collections.Generic.List[System.IO.FileInfo]
 $filesToPublicize = New-Object Collections.Generic.List[System.IO.FileInfo]
 
 foreach ($file in $rawFiles) {
-    if ($file.Name -like "System.") { continue }
+    if ($file.Name -like "System.*") { continue }
+    if ($file.Name -eq "netstandard.dll") { continue }
 
     if (IsAssemblyFileNeedingPublicizing -file $file) {
         $filesToPublicize.Add($file);
@@ -76,7 +77,7 @@ foreach ($file in $filesToPublicize) {
     $fileDest = """$publicDepsPath/" + $file.Name + """"
     if ($IsLinux) {
         $publicizerExe = Join-Path $cwd "scripts/AssemblyPublicizer/AssemblyPublicizer.exe"
-        Start-Process -FilePath "/usr/bin/mono" -WorkingDirectory $rawDepsPath -ArgumentList @($publicizerExe, "-i", $filePath, "-o", $fileDest) -Wait
+        Start-Process -FilePath "mono" -WorkingDirectory $rawDepsPath -ArgumentList @($publicizerExe, "-i", $filePath, "-o", $fileDest) -Wait
     } else {
         Start-Process -FilePath "scripts/AssemblyPublicizer/AssemblyPublicizer.exe" -WorkingDirectory $rawDepsPath -ArgumentList @("-i", $filePath, "-o", $fileDest) -Wait
     }
