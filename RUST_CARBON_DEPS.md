@@ -1,6 +1,10 @@
 # Rust / Carbon Build Dependencies
 
-This file explains what is required for the "set up the missing Rust/Carbon dependency folders and retry the build" path.
+This file is for contributors rebuilding the module from source.
+
+It is not required for normal deployment of a release build. For operator-facing installation and runtime setup, use [INSTALL.md](INSTALL.md).
+
+This project is currently confirmed to run on Linux only. The dependency flow below documents the Linux build path.
 
 ## What #2 Actually Means
 
@@ -225,8 +229,15 @@ If restore fails before assembly resolution, fix the NuGet side first. If restor
    Recommended helper: `scripts/install-pwsh-ubuntu.sh`
 3. Populate `raw-deps/linux` and generate `deps/linux`.
 4. Populate repo-root `carbon/` with the matching Carbon-managed DLLs.
-5. Run `dotnet restore`.
-6. Run `dotnet build RustServerMetrics.sln -c Linux`.
+5. Run `./build-linux.sh`.
+
+If you want the manual equivalent:
+
+```bash
+mkdir -p /tmp/nuget-packages /tmp/nuget-http
+NUGET_PACKAGES=/tmp/nuget-packages NUGET_HTTP_CACHE_PATH=/tmp/nuget-http dotnet restore RustServerMetrics.sln
+NUGET_PACKAGES=/tmp/nuget-packages NUGET_HTTP_CACHE_PATH=/tmp/nuget-http dotnet build RustServerMetrics.sln -c Linux
+```
 
 ## What I Would Check First If Build Still Fails
 

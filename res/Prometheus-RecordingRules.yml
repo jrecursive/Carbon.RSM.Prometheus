@@ -1,0 +1,18 @@
+groups:
+  - name: rsm_rates
+    interval: 30s
+    rules:
+      - record: rsm:plugin_hook_seconds:rate5m
+        expr: sum by (job, server, plugin) (rate(rsm_plugin_hook_seconds_total[5m]))
+
+      - record: rsm:module_hook_seconds:rate5m
+        expr: sum by (job, server, module) (rate(rsm_module_hook_seconds_total[5m]))
+
+      - record: rsm:network_updates:rate5m
+        expr: sum by (job, server, message_type) (rate(rsm_network_updates_total[5m]))
+
+      - record: rsm:network_update_bytes:rate5m
+        expr: sum by (job, server, message_type) (rate(rsm_network_update_bytes_total[5m]))
+
+      - record: rsm:players_condition_ratio
+        expr: rsm_players_condition_count / on (job, server) group_left(condition) clamp_min(rsm_players{state="connected"}, 1)

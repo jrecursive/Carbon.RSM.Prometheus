@@ -1,0 +1,18 @@
+[
+  {
+    "targets": [
+      "192.0.2.21:9108"
+    ],
+    "labels": {
+      "server": "us-main-1"
+    }
+  },
+  {
+    "targets": [
+      "192.0.2.22:9108"
+    ],
+    "labels": {
+      "server": "us-main-2"
+    }
+  }
+]

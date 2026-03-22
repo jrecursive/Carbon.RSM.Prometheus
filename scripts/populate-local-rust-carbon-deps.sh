@@ -205,8 +205,7 @@ Next steps:
      - ${PUBLIC_DEPS_DIR}
      - ${CARBON_OUTPUT_DIR}
   2. Run:
-     dotnet restore
-     dotnet build RustServerMetrics.sln -c Linux
+     ./build-linux.sh
 EOF
 }
 

@@ -56,522 +56,14 @@
         "w": 24,
         "h": 1
       },
-      "id": 1,
+      "id": 15,
       "panels": [],
-      "title": "Overview",
+      "title": "Network",
       "type": "row"
     },
     {
-      "id": 2,
-      "title": "Up",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "max(up{job=\"rust_server_metrics\",server=~\"$server\"})",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 3,
-      "title": "Connections",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_connections{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 4,
-      "title": "Players Connected",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_players{job=\"rust_server_metrics\",server=~\"$server\",state=\"connected\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 5,
-      "title": "Entities",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 12,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_entities_count{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 6,
-      "title": "Memory Used",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_memory_used_bytes{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 7,
-      "title": "Wipe ETA",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 1
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_wipe_time_remaining_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 8,
-      "title": "Server FPS",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 5
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "fps"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_server_frames_per_second{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{stat}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 9,
-      "title": "Server Frametime",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 5
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_server_frametime_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{stat}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 10,
-      "title": "GC Collections Rate",
+      "id": 18,
+      "title": "Global Network State",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -582,167 +74,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 5
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rate(rsm_gc_collections_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
-          "legendFormat": "gc/s",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 11,
-      "title": "Players By State",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 12
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_players{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{state}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 12,
-      "title": "Entities / Animals",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 12
+        "y": 1
       },
       "fieldConfig": {
         "defaults": {
@@ -803,38 +135,67 @@
       },
       "targets": [
         {
-          "expr": "rsm_entities_count{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "expr": "rsm_global_network_entities_count{job=\"rust_server_metrics\",server=~\"$server\"}",
           "legendFormat": "entities",
           "refId": "A"
         },
         {
-          "expr": "rsm_animals_total{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "animals",
+          "expr": "rsm_global_network_connections{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "connections",
           "refId": "B"
         }
       ]
     },
     {
-      "id": 13,
-      "title": "World Info",
-      "type": "stat",
+      "id": 19,
+      "title": "Network Queue Depth",
+      "type": "timeseries",
       "description": "",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "gridPos": {
-        "h": 4,
-        "w": 12,
+        "h": 7,
+        "w": 8,
         "x": 0,
-        "y": 19
+        "y": 8
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -844,55 +205,77 @@
               }
             ]
           },
-          "mappings": []
+          "unit": "short"
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "textMode": "name",
-        "wideLayout": true
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
-          "expr": "rsm_wipe_info{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{map_name}} size={{world_size}} seed={{world_seed}}",
-          "refId": "A",
-          "instant": true
+          "expr": "rsm_network_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{queue}}",
+          "refId": "A"
         }
       ]
     },
     {
-      "id": 14,
-      "title": "Build Info",
-      "type": "stat",
+      "id": 20,
+      "title": "Network Queue Bytes",
+      "type": "timeseries",
       "description": "",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
       },
       "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 19
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 8
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "none",
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -902,31 +285,104 @@
               }
             ]
           },
-          "mappings": []
+          "unit": "bytes"
         },
         "overrides": []
       },
       "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
         },
-        "textMode": "name",
-        "wideLayout": true
+        "tooltip": {
+          "mode": "multi"
+        }
       },
       "targets": [
         {
-          "expr": "rsm_exporter_build_info{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{version}} {{commit}}",
-          "refId": "A",
-          "instant": true
+          "expr": "rsm_network_queue_bytes{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{queue}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "Snapshot Queue Depth",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 15
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rsm_snapshot_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{stat}}",
+          "refId": "A"
         }
       ]
     },
@@ -934,18 +390,18 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 23,
+        "y": 22,
         "w": 24,
         "h": 1
       },
-      "id": 15,
+      "id": 25,
       "panels": [],
-      "title": "Network",
+      "title": "Players And Admin",
       "type": "row"
     },
     {
-      "id": 16,
-      "title": "Network Bytes Rate",
+      "id": 27,
+      "title": "Player Packet Loss Quantiles",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -954,89 +410,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 24
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "Bps"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rate(rsm_network_bytes_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
-          "legendFormat": "{{direction}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 17,
-      "title": "Network Packet Loss Ratio",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 24
+        "w": 6,
+        "x": 6,
+        "y": 23
       },
       "fieldConfig": {
         "defaults": {
@@ -1097,15 +473,20 @@
       },
       "targets": [
         {
-          "expr": "rsm_network_packet_loss_ratio{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "packet_loss",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(rsm_player_packet_loss_ratio_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "p50",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(rsm_player_packet_loss_ratio_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
         }
       ]
     },
     {
-      "id": 21,
-      "title": "Connection Queue Depth",
+      "id": 29,
+      "title": "Client Memory Quantiles",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1114,9 +495,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 31
+        "w": 6,
+        "x": 18,
+        "y": 23
       },
       "fieldConfig": {
         "defaults": {
@@ -1162,7 +543,7 @@
               }
             ]
           },
-          "unit": "short"
+          "unit": "bytes"
         },
         "overrides": []
       },
@@ -1177,17 +558,22 @@
       },
       "targets": [
         {
-          "expr": "rsm_connection_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{state}}",
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(rsm_client_memory_bytes_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "p50",
           "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(rsm_client_memory_bytes_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "p95",
+          "refId": "B"
         }
       ]
     },
     {
-      "id": 23,
-      "title": "Network Update Rate By Message Type",
+      "id": 32,
+      "title": "RCON Message / Auth Rates",
       "type": "timeseries",
-      "description": "Outbound message/update rate.",
+      "description": "",
       "datasource": {
         "type": "prometheus",
         "uid": "$datasource"
@@ -1195,8 +581,8 @@
       "gridPos": {
         "h": 7,
         "w": 8,
-        "x": 8,
-        "y": 38
+        "x": 0,
+        "y": 30
       },
       "fieldConfig": {
         "defaults": {
@@ -1257,15 +643,20 @@
       },
       "targets": [
         {
-          "expr": "sum by (message_type) (rate(rsm_network_updates_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
-          "legendFormat": "{{message_type}}",
+          "expr": "rate(rsm_rcon_messages_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
+          "legendFormat": "messages/s",
           "refId": "A"
+        },
+        {
+          "expr": "rate(rsm_rcon_failed_auth_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
+          "legendFormat": "failed_auth/s",
+          "refId": "B"
         }
       ]
     },
     {
-      "id": 24,
-      "title": "Network Update Bytes Rate By Message Type",
+      "id": 33,
+      "title": "RCON Clients / Bans",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1275,8 +666,8 @@
       "gridPos": {
         "h": 7,
         "w": 8,
-        "x": 16,
-        "y": 38
+        "x": 8,
+        "y": 30
       },
       "fieldConfig": {
         "defaults": {
@@ -1322,7 +713,7 @@
               }
             ]
           },
-          "unit": "Bps"
+          "unit": "short"
         },
         "overrides": []
       },
@@ -1337,28 +728,20 @@
       },
       "targets": [
         {
-          "expr": "sum by (message_type) (rate(rsm_network_update_bytes_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
-          "legendFormat": "{{message_type}}",
+          "expr": "rsm_rcon_clients{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "clients",
           "refId": "A"
+        },
+        {
+          "expr": "rsm_rcon_banned_addresses{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "banned_addresses",
+          "refId": "B"
         }
       ]
     },
     {
-      "collapsed": false,
-      "gridPos": {
-        "x": 0,
-        "y": 45,
-        "w": 24,
-        "h": 1
-      },
-      "id": 25,
-      "panels": [],
-      "title": "Players And Admin",
-      "type": "row"
-    },
-    {
-      "id": 26,
-      "title": "Player Ping Quantiles",
+      "id": 34,
+      "title": "EAC Auth Status",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1367,9 +750,757 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 6,
+        "w": 8,
+        "x": 16,
+        "y": 30
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "normal"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rsm_eac_auth_status{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{status}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 35,
+      "title": "Connection Lifecycle Rates",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
         "x": 0,
-        "y": 46
+        "y": 37
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(rsm_connection_attempts_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
+          "legendFormat": "attempts/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (reason) (rate(rsm_connection_failures_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "failure {{reason}}",
+          "refId": "B"
+        },
+        {
+          "expr": "sum by (reason) (rate(rsm_auth_rejections_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "auth_reject {{reason}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 36,
+      "title": "Kick Rates",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 37
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (reason) (rate(rsm_connection_kicks_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "kick {{reason}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum by (reason) (rate(rsm_eac_kicks_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "eac {{reason}}",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "id": 37,
+      "title": "Console Command Rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 44
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(10, rate(rsm_console_command_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "{{command}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 38,
+      "title": "Console Command Duration Rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 44
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "sps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(10, rate(rsm_console_command_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "{{command}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 51,
+        "w": 24,
+        "h": 1
+      },
+      "id": 39,
+      "panels": [],
+      "title": "Hooks And Runtime",
+      "type": "row"
+    },
+    {
+      "id": 40,
+      "title": "Plugin Hook Rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 52
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "sps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (plugin) (rate(rsm_plugin_hook_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "{{plugin}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 41,
+      "title": "Module Hook Rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 52
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "sps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (module) (rate(rsm_module_hook_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]))",
+          "legendFormat": "{{module}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 42,
+      "title": "Top Method Calls Per Second",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 59
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (family, behaviour, method) (label_replace(rate(rsm_invoke_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"invoke\", \"__name__\", \".*\") or label_replace(rate(rsm_rpc_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"rpc\", \"__name__\", \".*\") or label_replace(rate(rsm_work_queue_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"work_queue\", \"__name__\", \".*\") or label_replace(rate(rsm_server_update_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"server_update\", \"__name__\", \".*\") or label_replace(rate(rsm_timewarning_calls_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"timewarning\", \"__name__\", \".*\")))",
+          "legendFormat": "{{family}} {{behaviour}}.{{method}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 43,
+      "title": "Top Method Duration Consumption Per Second",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 59
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "sps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(10, sum by (family, behaviour, method) (label_replace(rate(rsm_invoke_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"invoke\", \"__name__\", \".*\") or label_replace(rate(rsm_rpc_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"rpc\", \"__name__\", \".*\") or label_replace(rate(rsm_work_queue_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"work_queue\", \"__name__\", \".*\") or label_replace(rate(rsm_server_update_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"server_update\", \"__name__\", \".*\") or label_replace(rate(rsm_timewarning_duration_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval]), \"family\", \"timewarning\", \"__name__\", \".*\")))",
+          "legendFormat": "{{family}} {{behaviour}}.{{method}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 44,
+      "title": "Latency P95",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 66
       },
       "fieldConfig": {
         "defaults": {
@@ -1430,20 +1561,25 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(rsm_player_ping_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
-          "legendFormat": "p50",
+          "expr": "histogram_quantile(0.95, sum by (le, behaviour) (rate(rsm_rpc_duration_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "rpc {{behaviour}}",
           "refId": "A"
         },
         {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(rsm_player_ping_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
-          "legendFormat": "p95",
+          "expr": "histogram_quantile(0.95, sum by (le, behaviour) (rate(rsm_server_update_duration_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "server_update {{behaviour}}",
           "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, behaviour) (rate(rsm_work_queue_duration_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
+          "legendFormat": "work_queue {{behaviour}}",
+          "refId": "C"
         }
       ]
     },
     {
-      "id": 28,
-      "title": "Client FPS Quantiles",
+      "id": 45,
+      "title": "Runtime Phase Seconds",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1452,9 +1588,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 46
+        "w": 8,
+        "x": 8,
+        "y": 66
       },
       "fieldConfig": {
         "defaults": {
@@ -1500,7 +1636,7 @@
               }
             ]
           },
-          "unit": "fps"
+          "unit": "s"
         },
         "overrides": []
       },
@@ -1515,20 +1651,105 @@
       },
       "targets": [
         {
-          "expr": "histogram_quantile(0.5, sum by (le) (rate(rsm_client_frames_per_second_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
-          "legendFormat": "p50",
+          "expr": "rsm_runtime_phase_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{phase}}",
           "refId": "A"
-        },
-        {
-          "expr": "histogram_quantile(0.95, sum by (le) (rate(rsm_client_frames_per_second_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
-          "legendFormat": "p95",
-          "refId": "B"
         }
       ]
     },
     {
-      "id": 30,
-      "title": "Current Affected Player Counts",
+      "id": 46,
+      "title": "Task And Load Balancer",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 66
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rsm_task_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "task {{queue}}",
+          "refId": "A"
+        },
+        {
+          "expr": "rsm_load_balancer_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "load_balancer",
+          "refId": "B"
+        },
+        {
+          "expr": "rsm_load_balancer_paused{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "paused",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "id": 47,
+      "title": "AI Think Queue Depth",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1539,7 +1760,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 53
+        "y": 73
       },
       "fieldConfig": {
         "defaults": {
@@ -1600,15 +1821,15 @@
       },
       "targets": [
         {
-          "expr": "rsm_players_condition_count{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{condition}}",
+          "expr": "rsm_ai_think_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{queue}}",
           "refId": "A"
         }
       ]
     },
     {
-      "id": 31,
-      "title": "Player Observation Population",
+      "id": 48,
+      "title": "AI Think Budget Seconds",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -1619,7 +1840,87 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 53
+        "y": 73
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rsm_ai_think_budget_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{queue}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 49,
+      "title": "Work Queue Depth",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 80
       },
       "fieldConfig": {
         "defaults": {
@@ -1680,8 +1981,88 @@
       },
       "targets": [
         {
-          "expr": "rsm_player_observation_population{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{kind}}",
+          "expr": "rsm_work_queue_depth{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "legendFormat": "{{queue}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 50,
+      "title": "Work Queue Execution Rate",
+      "type": "timeseries",
+      "description": "",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "$datasource"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 80
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 3,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "sps"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "rate(rsm_work_queue_execution_seconds_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
+          "legendFormat": "{{queue}}",
           "refId": "A"
         }
       ]
@@ -1690,7 +2071,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 60,
+        "y": 87,
         "w": 24,
         "h": 1
       },
@@ -1700,8 +2081,8 @@
       "type": "row"
     },
     {
-      "id": 52,
-      "title": "Save In Progress",
+      "id": 55,
+      "title": "Animals",
       "type": "stat",
       "description": "",
       "datasource": {
@@ -1711,124 +2092,8 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 0,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "none",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_save_in_progress{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 53,
-      "title": "Last Save Age",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "time() - rsm_exporter_last_save_timestamp_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 54,
-      "title": "Save Entities",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 8,
-        "y": 61
+        "x": 12,
+        "y": 88
       },
       "fieldConfig": {
         "defaults": {
@@ -1866,446 +2131,10 @@
       },
       "targets": [
         {
-          "expr": "rsm_save_entities_count{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "expr": "rsm_animals_total{job=\"rust_server_metrics\",server=~\"$server\"}",
           "legendFormat": "",
           "refId": "A",
           "instant": true
-        }
-      ]
-    },
-    {
-      "id": 56,
-      "title": "Cargo Time Remaining",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 16,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_cargo_ship_time_remaining_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 57,
-      "title": "Cargo Dock Count",
-      "type": "stat",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 20,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "mappings": []
-        },
-        "overrides": []
-      },
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name",
-        "wideLayout": true
-      },
-      "targets": [
-        {
-          "expr": "rsm_cargo_ship_dock_count{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "",
-          "refId": "A",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 58,
-      "title": "Save Phase Durations",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 65
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_save_duration_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{phase}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 59,
-      "title": "Hackable Crates",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 65
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_hackable_crates{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{state}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 60,
-      "title": "Event Active",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 72
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_event_active{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{event}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 61,
-      "title": "Event Count",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 72
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "rsm_event_count{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{event}}",
-          "refId": "A"
         }
       ]
     },
@@ -2313,7 +2142,7 @@
       "collapsed": false,
       "gridPos": {
         "x": 0,
-        "y": 79,
+        "y": 92,
         "w": 24,
         "h": 1
       },
@@ -2323,8 +2152,8 @@
       "type": "row"
     },
     {
-      "id": 63,
-      "title": "Prometheus Scrape Duration",
+      "id": 64,
+      "title": "Collector Duration P95",
       "type": "timeseries",
       "description": "",
       "datasource": {
@@ -2334,8 +2163,8 @@
       "gridPos": {
         "h": 7,
         "w": 8,
-        "x": 0,
-        "y": 80
+        "x": 8,
+        "y": 93
       },
       "fieldConfig": {
         "defaults": {
@@ -2396,248 +2225,8 @@
       },
       "targets": [
         {
-          "expr": "scrape_duration_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
-          "legendFormat": "{{instance}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 65,
-      "title": "Last Snapshot Age By Collector",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 80
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "s"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "time() - rsm_exporter_last_snapshot_success_timestamp_seconds{job=\"rust_server_metrics\",server=~\"$server\"}",
+          "expr": "histogram_quantile(0.95, sum by (le, collector) (rate(rsm_exporter_snapshot_duration_seconds_bucket{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])))",
           "legendFormat": "{{collector}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 66,
-      "title": "Exporter Collect Errors",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 87
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "increase(rsm_exporter_collect_errors_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
-          "legendFormat": "{{collector}}",
-          "refId": "A"
-        }
-      ]
-    },
-    {
-      "id": 67,
-      "title": "Exporter Series Dropped",
-      "type": "timeseries",
-      "description": "",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "$datasource"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 87
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 3,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "multi"
-        }
-      },
-      "targets": [
-        {
-          "expr": "increase(rsm_exporter_series_dropped_total{job=\"rust_server_metrics\",server=~\"$server\"}[$__rate_interval])",
-          "legendFormat": "{{family}} {{reason}} {{action}}",
           "refId": "A"
         }
       ]
@@ -2707,8 +2296,8 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Carbon RSM Operations",
-  "uid": "carbon-rsm-ops",
-  "version": 4,
+  "title": "Carbon RSM Diagnostics",
+  "uid": "carbon-rsm-diag",
+  "version": 1,
   "weekStart": ""
 }
