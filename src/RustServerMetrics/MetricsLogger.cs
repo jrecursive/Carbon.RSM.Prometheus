@@ -229,6 +229,8 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
                 : $"[ServerMetrics]: Applied startup patch: {nestedType.Name}");
         }
 
+        RustServerMetricsLoader.ApplyPendingModTimeWarnings();
+
         if (!Ready || !Configuration.ExportPlayerAggregateMetrics)
         {
             return;
@@ -1356,12 +1358,6 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        if (Configuration.UsePrometheusNet)
-        {
-            Debug.LogWarning("[ServerMetrics]: prometheus-net was requested but proved incompatible with this RustDedicated runtime. Using the built-in exporter implementation.");
-            Configuration.UsePrometheusNet = false;
-        }
-
         if (RconProfiler.mode < 1)
         {
             RconProfiler.mode = 1;
@@ -1404,6 +1400,12 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         }
 
         Configuration.Normalize();
+
+        if (Configuration.UsePrometheusNet)
+        {
+            Debug.LogWarning("[ServerMetrics]: prometheus-net was requested but proved incompatible with this RustDedicated runtime. Using the built-in exporter implementation.");
+            Configuration.UsePrometheusNet = false;
+        }
 
         if (Configuration.DebugEndpointEnabled && string.IsNullOrWhiteSpace(Configuration.DebugEndpointBearerToken))
         {

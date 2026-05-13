@@ -3,7 +3,6 @@ using RustServerMetrics.HarmonyPatches.Utility;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using UnityEngine;
 
 namespace RustServerMetrics.HarmonyPatches.Delayed
 {
@@ -14,13 +13,7 @@ namespace RustServerMetrics.HarmonyPatches.Delayed
         [HarmonyPrepare]
         public static bool Prepare()
         {
-            if (!RustServerMetricsLoader.__serverStarted)
-            {
-                Debug.Log("Note: Cannot patch ConsoleSystem_Internal_Patch yet. We will patch it upon server start.");
-                return false;
-            }
-
-            return true;
+            return RustServerMetricsLoader.__serverStarted;
         }
         
         [HarmonyTargetMethods]

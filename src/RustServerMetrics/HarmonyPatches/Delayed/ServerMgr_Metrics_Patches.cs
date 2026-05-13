@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RustServerMetrics.HarmonyPatches.Utility;
-using UnityEngine;
 
 namespace RustServerMetrics.HarmonyPatches.Delayed;
 
@@ -16,13 +15,7 @@ internal static class ServerMgr_Metrics_Patches
     [HarmonyPrepare]
     public static bool Prepare()
     {
-        if (!RustServerMetricsLoader.__serverStarted)
-        {
-            Debug.Log("Note: Cannot patch ServerMgr_Metrics_Patches yet. We will patch it upon server start.");
-            return false;
-        }
-
-        return true;
+        return RustServerMetricsLoader.__serverStarted;
     }
     
     [HarmonyTargetMethods]
@@ -76,4 +69,3 @@ internal static class ServerMgr_Metrics_Patches
         MetricsLogger.Instance.ServerUpdate.LogTime(methodName, duration.TotalMilliseconds);
     }
 }
-

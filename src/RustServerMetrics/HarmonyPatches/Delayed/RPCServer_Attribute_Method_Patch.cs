@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 
 namespace RustServerMetrics.HarmonyPatches.Delayed;
 
@@ -16,13 +15,7 @@ internal class RPCServer_Attribute_Method_Patch
     [HarmonyPrepare]
     public static bool Prepare()
     {
-        if (RustServerMetricsLoader.__serverStarted)
-        {
-            return true;
-        }
-            
-        Debug.Log("Note: Cannot patch RPCServer_Attribute_Method_Patch yet. We will patch it upon server start.");
-        return false;
+        return RustServerMetricsLoader.__serverStarted;
     }
         
     [HarmonyTargetMethods]
