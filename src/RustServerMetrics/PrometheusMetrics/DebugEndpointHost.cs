@@ -23,6 +23,7 @@ internal sealed class DebugEndpointHost : IDisposable
     public string ListenHost { get; private set; }
     public int ListenPort { get; private set; }
     public string BearerToken { get; private set; }
+    public string EndpointPrefix { get; private set; }
 
     public void Start(string listenHost, int listenPort, string bearerToken)
     {
@@ -31,55 +32,93 @@ internal sealed class DebugEndpointHost : IDisposable
         ListenHost = listenHost;
         ListenPort = listenPort;
         BearerToken = bearerToken ?? string.Empty;
+        EndpointPrefix = BuildPrefix(listenHost, listenPort);
 
-        _listener = new HttpListener();
-        _listener.Prefixes.Add($"http://{NormalizeHost(listenHost)}:{listenPort}/player-observations/");
-        _listener.Start();
+        var listener = new HttpListener();
+        listener.Prefixes.Add(EndpointPrefix);
 
-        _cancellation = new CancellationTokenSource();
-        _serverTask = Task.Factory.StartNew(() => ServeLoop(_cancellation.Token), TaskCreationOptions.LongRunning);
+        try
+        {
+            listener.Start();
+        }
+        catch
+        {
+            try
+            {
+                listener.Close();
+            }
+            catch
+            {
+            }
+
+            IsRunning = false;
+            throw;
+        }
+
+        _listener = listener;
+        var cancellation = new CancellationTokenSource();
+        _cancellation = cancellation;
+        _serverTask = Task.Factory
+            .StartNew(() => ServeLoop(cancellation.Token), cancellation.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default)
+            .Unwrap();
         IsRunning = true;
     }
 
     public void Stop()
     {
-        if (_listener == null)
-        {
-            IsRunning = false;
-            return;
-        }
+        var listener = _listener;
+        var cancellation = _cancellation;
+        var serverTask = _serverTask;
 
-        _cancellation.Cancel();
-
-        try
-        {
-            _listener.Stop();
-        }
-        catch
-        {
-        }
-
-        try
-        {
-            _listener.Close();
-        }
-        catch
-        {
-        }
-
-        try
-        {
-            _serverTask?.GetAwaiter().GetResult();
-        }
-        catch
-        {
-        }
-
-        _cancellation.Dispose();
         _listener = null;
         _cancellation = null;
         _serverTask = null;
         IsRunning = false;
+
+        if (listener == null)
+        {
+            return;
+        }
+
+        try
+        {
+            cancellation?.Cancel();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            listener.Stop();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            listener.Close();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            serverTask?.GetAwaiter().GetResult();
+        }
+        catch
+        {
+        }
+
+        try
+        {
+            cancellation?.Dispose();
+        }
+        catch
+        {
+        }
     }
 
     public void Dispose()
@@ -187,5 +226,10 @@ internal sealed class DebugEndpointHost : IDisposable
         }
 
         return host;
+    }
+
+    private static string BuildPrefix(string listenHost, int listenPort)
+    {
+        return $"http://{NormalizeHost(listenHost)}:{listenPort}/player-observations/";
     }
 }

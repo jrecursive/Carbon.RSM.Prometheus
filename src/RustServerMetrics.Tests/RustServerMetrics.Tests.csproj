@@ -18,6 +18,8 @@
 	<ItemGroup>
 		<Compile Include="../RustServerMetrics/Config/ConfigData.cs" Link="Config/ConfigData.cs" />
 		<Compile Include="../RustServerMetrics/PrometheusMetrics/MetricGuardrails.cs" Link="PrometheusMetrics/MetricGuardrails.cs" />
+		<Compile Include="../RustServerMetrics/PrometheusMetrics/MetricRegistry.cs" Link="PrometheusMetrics/MetricRegistry.cs" />
 		<Compile Include="../RustServerMetrics/PrometheusMetrics/PlayerObservationStore.cs" Link="PrometheusMetrics/PlayerObservationStore.cs" />
+		<Compile Include="../RustServerMetrics/PrometheusMetrics/PrometheusExporterHost.cs" Link="PrometheusMetrics/PrometheusExporterHost.cs" />
 	</ItemGroup>
 </Project>

@@ -174,6 +174,11 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
 
     internal static void Initialize()
     {
+        if (Instance != null)
+        {
+            return;
+        }
+
         new GameObject().AddComponent<MetricsLogger>();
     }
 
@@ -1366,12 +1371,12 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
 
         if (Configuration.PrometheusExporterEnabled)
         {
-            _exporterHost.Start(Configuration.PrometheusListenHost, Configuration.PrometheusListenPort, Configuration.PrometheusMetricsPath);
+            StartPrometheusExporter();
         }
 
         if (Configuration.DebugEndpointEnabled)
         {
-            _debugEndpointHost.Start(Configuration.DebugEndpointListenHost, Configuration.DebugEndpointListenPort, Configuration.DebugEndpointBearerToken);
+            StartDebugEndpoint();
         }
 
         StartRepeatingWork();
@@ -1412,6 +1417,41 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         {
             Debug.LogWarning("[ServerMetrics]: Debug endpoint host/port collides with the metrics endpoint. Disabling the debug endpoint.");
             Configuration.DebugEndpointEnabled = false;
+        }
+    }
+
+    private void StartPrometheusExporter()
+    {
+        try
+        {
+            _exporterHost.Start(Configuration.PrometheusListenHost, Configuration.PrometheusListenPort, Configuration.PrometheusMetricsPath);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[ServerMetrics]: Failed to start Prometheus exporter on {_exporterHost.EndpointPrefix}: {ex.Message}");
+            Debug.LogWarning("[ServerMetrics]: Metrics collection will continue, but the Prometheus endpoint is not available until the listener can bind and configuration is reloaded.");
+
+            if (Configuration.DebugLogging)
+            {
+                Debug.LogException(ex);
+            }
+        }
+    }
+
+    private void StartDebugEndpoint()
+    {
+        try
+        {
+            _debugEndpointHost.Start(Configuration.DebugEndpointListenHost, Configuration.DebugEndpointListenPort, Configuration.DebugEndpointBearerToken);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"[ServerMetrics]: Failed to start debug endpoint on {_debugEndpointHost.EndpointPrefix}: {ex.Message}");
+
+            if (Configuration.DebugLogging)
+            {
+                Debug.LogException(ex);
+            }
         }
     }
 
