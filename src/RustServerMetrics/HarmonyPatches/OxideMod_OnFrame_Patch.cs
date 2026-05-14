@@ -19,25 +19,8 @@ namespace RustServerMetrics.HarmonyPatches
         [HarmonyPrepare]
         public static bool Prepare()
         {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            foreach (var assembly in assemblies)
-            {
-                if (!string.Equals(assembly.GetName().Name, OxideCore_AssemblyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                _oxideCoreAssembly = assembly;
-
-                break;
-            }
-
-            if (_oxideCoreAssembly == null)
-            {
-                return false;
-            }
-
-            return true;
+            // Hook totals are collected by MetricsLogger.PollHookSnapshots; patching CarbonProcessor.Update adds per-frame overhead.
+            return false;
         }
 
         [HarmonyTargetMethods]

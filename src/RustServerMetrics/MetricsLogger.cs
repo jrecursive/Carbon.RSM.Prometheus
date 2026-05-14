@@ -61,6 +61,32 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         public Message.Type Value;
     }
 
+    private readonly struct HookMetricSample
+    {
+        public readonly string Name;
+        public readonly double TotalSeconds;
+
+        public HookMetricSample(string name, double totalSeconds)
+        {
+            Name = name;
+            TotalSeconds = totalSeconds;
+        }
+    }
+
+    private readonly struct WorkQueueMetricSample
+    {
+        public readonly string Label;
+        public readonly int Depth;
+        public readonly double TotalExecutionSeconds;
+
+        public WorkQueueMetricSample(string label, int depth, double totalExecutionSeconds)
+        {
+            Label = label;
+            Depth = depth;
+            TotalExecutionSeconds = totalExecutionSeconds;
+        }
+    }
+
     private readonly Dictionary<ulong, Action> _playerStatsActions = new();
     private readonly Dictionary<ulong, uint> _perfReportDelayCounter = new();
     private readonly Dictionary<string, double> _lastPluginHookSeconds = new(StringComparer.Ordinal);
@@ -77,6 +103,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
     private MetricRegistry _registry;
     private MetricFactory _metricFactory;
     private MetricGuardrails _guardrails;
+    private MetricsWorker _metricsWorker;
     private PlayerObservationStore _playerObservations = new();
     private Dictionary<TimedMetricKind, TimedMetricFamily> _timedFamilies = new();
     private readonly ExpiringSeriesTracker _pluginSeries = new();
@@ -274,7 +301,8 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
 
         _playerStatsActions.Remove(player.userID);
         _perfReportDelayCounter.Remove(player.userID);
-        _playerObservations.Remove(player.userID);
+        var userId = player.userID;
+        EnqueueMetricUpdate(() => _playerObservations.Remove(userId));
     }
 
     internal void OnConnectionAttempt()
@@ -284,7 +312,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        _connectionAttemptsTotal.Inc();
+        EnqueueMetricUpdate(() => _connectionAttemptsTotal.Inc());
     }
 
     internal void OnConnectionRejected(string reason)
@@ -295,8 +323,11 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         }
 
         var resolvedReason = NormalizeReasonLabel(reason);
-        _connectionFailuresTotal.WithLabels(resolvedReason).Inc();
-        _authRejectionsTotal.WithLabels(resolvedReason).Inc();
+        EnqueueMetricUpdate(() =>
+        {
+            _connectionFailuresTotal.WithLabels(resolvedReason).Inc();
+            _authRejectionsTotal.WithLabels(resolvedReason).Inc();
+        });
     }
 
     internal void OnConnectionKick(Connection connection, string reason)
@@ -307,15 +338,24 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         }
 
         var normalizedReason = NormalizeReasonLabel(reason);
-        _connectionKicksTotal.WithLabels(normalizedReason).Inc();
+        var eacReason = default(string);
 
         if (!string.IsNullOrWhiteSpace(connection?.authStatusEAC) || (reason?.StartsWith("EAC:", StringComparison.OrdinalIgnoreCase) ?? false))
         {
-            var eacReason = !string.IsNullOrWhiteSpace(connection?.authStatusEAC)
+            eacReason = !string.IsNullOrWhiteSpace(connection?.authStatusEAC)
                 ? NormalizeReasonLabel(connection.authStatusEAC)
                 : NormalizeReasonLabel(reason);
-            _eacKicksTotal.WithLabels(eacReason).Inc();
         }
+
+        EnqueueMetricUpdate(() =>
+        {
+            _connectionKicksTotal.WithLabels(normalizedReason).Inc();
+
+            if (eacReason != null)
+            {
+                _eacKicksTotal.WithLabels(eacReason).Inc();
+            }
+        });
     }
 
     internal void OnNetWritePacketID(NetWrite write, Message.Type messageType)
@@ -360,16 +400,20 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        var resolvedMessageType = _guardrails.ResolveMessageType(messageType);
         var totalBytes = Convert.ToDouble(write.Length) * connectionCount;
-        var nowUtc = DateTime.UtcNow;
 
-        _networkUpdatesTotal.WithLabels(resolvedMessageType).Inc(connectionCount);
-        _networkUpdateBytesTotal.WithLabels(resolvedMessageType).Inc(totalBytes);
-        _networkUpdateSeries.Touch(new[] { resolvedMessageType }, nowUtc, labels =>
+        EnqueueMetricUpdate(() =>
         {
-            _networkUpdatesTotal.RemoveLabelled(labels);
-            _networkUpdateBytesTotal.RemoveLabelled(labels);
+            var resolvedMessageType = _guardrails.ResolveMessageType(messageType);
+            var nowUtc = DateTime.UtcNow;
+
+            _networkUpdatesTotal.WithLabels(resolvedMessageType).Inc(connectionCount);
+            _networkUpdateBytesTotal.WithLabels(resolvedMessageType).Inc(totalBytes);
+            _networkUpdateSeries.Touch(new[] { resolvedMessageType }, nowUtc, labels =>
+            {
+                _networkUpdatesTotal.RemoveLabelled(labels);
+                _networkUpdateBytesTotal.RemoveLabelled(labels);
+            });
         });
     }
 
@@ -380,30 +424,8 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("plugin_snapshot", () =>
-        {
-            var nowUtc = DateTime.UtcNow;
-
-            foreach (var item in metrics)
-            {
-                var rawName = string.IsNullOrWhiteSpace(item.Key) ? "unknown" : item.Key.Trim();
-                var currentTotal = item.Value;
-                _pluginLastSeenUtc[rawName] = nowUtc;
-
-                if (_lastPluginHookSeconds.TryGetValue(rawName, out var previousTotal))
-                {
-                    var delta = currentTotal - previousTotal;
-                    if (delta > 0)
-                    {
-                        var label = _guardrails.ResolvePlugin(rawName);
-                        _pluginHookSecondsTotal.WithLabels(label).Inc(delta);
-                        _pluginSeries.Touch(new[] { label }, nowUtc, labels => _pluginHookSecondsTotal.RemoveLabelled(labels));
-                    }
-                }
-
-                _lastPluginHookSeconds[rawName] = currentTotal;
-            }
-        });
+        var samples = CopyHookMetrics(metrics);
+        EnqueueLatestMetricUpdate("plugin_snapshot", () => RunCollector("plugin_snapshot", () => ApplyPluginMetrics(samples)));
     }
 
     internal void OnCarbonModuleMetrics(Dictionary<string, double> metrics)
@@ -413,30 +435,71 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("module_snapshot", () =>
+        var samples = CopyHookMetrics(metrics);
+        EnqueueLatestMetricUpdate("module_snapshot", () => RunCollector("module_snapshot", () => ApplyModuleMetrics(samples)));
+    }
+
+    private static HookMetricSample[] CopyHookMetrics(Dictionary<string, double> metrics)
+    {
+        var samples = new HookMetricSample[metrics.Count];
+        var index = 0;
+
+        foreach (var item in metrics)
         {
-            var nowUtc = DateTime.UtcNow;
+            samples[index++] = new HookMetricSample(item.Key, item.Value);
+        }
 
-            foreach (var item in metrics)
+        return samples;
+    }
+
+    private void ApplyPluginMetrics(HookMetricSample[] metrics)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        foreach (var item in metrics)
+        {
+            var rawName = string.IsNullOrWhiteSpace(item.Name) ? "unknown" : item.Name.Trim();
+            var currentTotal = item.TotalSeconds;
+            _pluginLastSeenUtc[rawName] = nowUtc;
+
+            if (_lastPluginHookSeconds.TryGetValue(rawName, out var previousTotal))
             {
-                var rawName = string.IsNullOrWhiteSpace(item.Key) ? "unknown" : item.Key.Trim();
-                var currentTotal = item.Value;
-                _moduleLastSeenUtc[rawName] = nowUtc;
-
-                if (_lastModuleHookSeconds.TryGetValue(rawName, out var previousTotal))
+                var delta = currentTotal - previousTotal;
+                if (delta > 0)
                 {
-                    var delta = currentTotal - previousTotal;
-                    if (delta > 0)
-                    {
-                        var label = _guardrails.ResolveModule(rawName);
-                        _moduleHookSecondsTotal.WithLabels(label).Inc(delta);
-                        _moduleSeries.Touch(new[] { label }, nowUtc, labels => _moduleHookSecondsTotal.RemoveLabelled(labels));
-                    }
+                    var label = _guardrails.ResolvePlugin(rawName);
+                    _pluginHookSecondsTotal.WithLabels(label).Inc(delta);
+                    _pluginSeries.Touch(new[] { label }, nowUtc, labels => _pluginHookSecondsTotal.RemoveLabelled(labels));
                 }
-
-                _lastModuleHookSeconds[rawName] = currentTotal;
             }
-        });
+
+            _lastPluginHookSeconds[rawName] = currentTotal;
+        }
+    }
+
+    private void ApplyModuleMetrics(HookMetricSample[] metrics)
+    {
+        var nowUtc = DateTime.UtcNow;
+
+        foreach (var item in metrics)
+        {
+            var rawName = string.IsNullOrWhiteSpace(item.Name) ? "unknown" : item.Name.Trim();
+            var currentTotal = item.TotalSeconds;
+            _moduleLastSeenUtc[rawName] = nowUtc;
+
+            if (_lastModuleHookSeconds.TryGetValue(rawName, out var previousTotal))
+            {
+                var delta = currentTotal - previousTotal;
+                if (delta > 0)
+                {
+                    var label = _guardrails.ResolveModule(rawName);
+                    _moduleHookSecondsTotal.WithLabels(label).Inc(delta);
+                    _moduleSeries.Touch(new[] { label }, nowUtc, labels => _moduleHookSecondsTotal.RemoveLabelled(labels));
+                }
+            }
+
+            _lastModuleHookSeconds[rawName] = currentTotal;
+        }
     }
 
     internal bool OnClientPerformanceReport(ClientPerformanceReport clientPerformanceReport)
@@ -451,16 +514,16 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return true;
         }
 
-        RunCollector("client_performance", () =>
-        {
-            var nowUtc = DateTime.UtcNow;
-            var clientFps = Math.Max(0, clientPerformanceReport.fps);
-            var clientMemoryBytes = Math.Max(0L, clientPerformanceReport.memory_system) * 1024L * 1024L;
-            var playerId = TryParsePlayerId(clientPerformanceReport.user_id);
-            var player = playerId.HasValue ? BasePlayer.FindByID(playerId.Value) : null;
-            var playerName = player?.displayName ?? string.Empty;
-            var playerIp = SanitizeIpAddress(player?.net?.connection?.ipaddress);
+        var nowUtc = DateTime.UtcNow;
+        var clientFps = Math.Max(0, clientPerformanceReport.fps);
+        var clientMemoryBytes = Math.Max(0L, clientPerformanceReport.memory_system) * 1024L * 1024L;
+        var playerId = TryParsePlayerId(clientPerformanceReport.user_id);
+        var player = playerId.HasValue ? BasePlayer.FindByID(playerId.Value) : null;
+        var playerName = player?.displayName ?? string.Empty;
+        var playerIp = SanitizeIpAddress(player?.net?.connection?.ipaddress);
 
+        EnqueueMetricUpdate(() => RunCollector("client_performance", () =>
+        {
             _clientFramesPerSecond.Observe(clientFps);
             _clientMemoryBytes.Observe(clientMemoryBytes);
 
@@ -474,7 +537,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
                     clientMemoryBytes,
                     nowUtc);
             }
-        });
+        }));
 
         return true;
     }
@@ -501,79 +564,146 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             _firstPerformanceReportGenerated = true;
         }
 
-        RunCollector("server_snapshot", () =>
+        try
         {
             var current = Performance.current;
             var connections = Net.sv?.connections;
             var connectionCount = connections?.Count ?? 0;
-
-            _serverFramesPerSecond.WithLabels("instant").Set(current.frameRate);
-            _serverFramesPerSecond.WithLabels("average").Set(current.frameRateAverage);
-            _serverFrametimeSeconds.WithLabels("instant").Set(current.frameTime / 1000d);
-            _serverFrametimeSeconds.WithLabels("average").Set(current.frameTimeAverage / 1000d);
-            _memoryUsedBytes.Set(GetMemoryUsageBytes(current));
-            _connections.Set(connectionCount);
-
-            ObserveGcCollections(current.memoryCollections);
-
-            _taskQueueDepth.WithLabels("load_balancer").Set(current.loadBalancerTasks);
-            _taskQueueDepth.WithLabels("invoke_handler").Set(current.invokeHandlerTasks);
-            _taskQueueDepth.WithLabels("workshop_skins_queue").Set(current.workshopSkinsQueued);
-
+            var memoryUsedBytes = GetMemoryUsageBytes(current);
             var bytesReceivedTotal = Net.sv.GetStat(null, BaseNetwork.StatTypeLong.BytesReceived);
             var bytesSentTotal = Net.sv.GetStat(null, BaseNetwork.StatTypeLong.BytesSent);
             var packetLossLastSecond = Net.sv.GetStat(null, BaseNetwork.StatTypeLong.PacketLossLastSecond);
+            var connectedPlayers = BasePlayer.activePlayerList.Count;
+            var sleepingPlayers = BasePlayer.sleepingPlayerList.Count;
+            var botPlayers = BasePlayer.bots.Count;
+            var joiningPlayers = ServerMgr.Instance?.connectionQueue?.Joining ?? 0;
+            var queuedPlayers = ServerMgr.Instance?.connectionQueue?.Queued ?? 0;
+            var receivingSnapshotPlayers = CountReceivingSnapshotPlayers(out var totalSnapshotQueueDepth, out var maxSnapshotQueueDepth);
+            var reservedConnections = ServerMgr.Instance?.connectionQueue?.ReservedCount ?? 0;
+            var entityCount = BaseNetworkable.serverEntities?.Count ?? 0;
+            var baseNetwork = (BaseNetwork)Net.sv;
+            var networkReadQueueLength = baseNetwork.ReadQueueLength;
+            var networkWriteQueueLength = baseNetwork.WriteQueueLength;
+            var networkDecryptQueueLength = baseNetwork.DecryptQueueLength;
+            var networkReadQueueBytes = baseNetwork.ReadQueueBytes;
+            var networkWriteQueueBytes = baseNetwork.WriteQueueBytes;
+            var networkDecryptQueueBytes = baseNetwork.DecryptQueueBytes;
+            var serverMgrUpdateSeconds = RuntimeProfiler.ServerMgr_Update.TotalSeconds;
+            var netCycleSeconds = RuntimeProfiler.Net_Cycle.TotalSeconds;
+            var physicsSyncSeconds = RuntimeProfiler.Physics_SyncTransforms.TotalSeconds;
+            var companionTickSeconds = RuntimeProfiler.Companion_Tick.TotalSeconds;
+            var basePlayerTickSeconds = RuntimeProfiler.BasePlayer_ServerCycle.TotalSeconds;
+            var humanAiQueueDepth = AIThinkManager._processQueue.Count;
+            var animalAiQueueDepth = AIThinkManager._animalProcessQueue.Count;
+            var petAiQueueDepth = AIThinkManager._petProcessQueue.Count;
+            var humanAiBudgetSeconds = AIThinkManager.framebudgetms / 1000d;
+            var animalAiBudgetSeconds = AIThinkManager.animalframebudgetms / 1000d;
+            var petAiBudgetSeconds = AIThinkManager.petframebudgetms / 1000d;
+            var loadBalancerDepth = LoadBalancer.Count();
+            var loadBalancerPaused = LoadBalancer.Paused ? 1 : 0;
+            var globalNetworkEntityCount = GlobalNetworkHandler.server?.serverData?.Count ?? 0;
+            var globalNetworkConnectionCount = CountGlobalNetworkConnections(connections);
+            var animalCount = AnimalBrain.Count;
+            var wipeTimer = WipeTimer.serverinstance;
+            var wipeTimeRemainingSeconds = wipeTimer != null
+                ? (double?)Math.Max(0d, wipeTimer.GetTimeSpanUntilWipe().TotalSeconds)
+                : null;
+            var wipeInfoLabelValues = new[]
+            {
+                World.Name ?? "unknown",
+                World.Size.ToString(CultureInfo.InvariantCulture),
+                World.Seed.ToString(CultureInfo.InvariantCulture),
+                SaveRestore.WipeId ?? "unknown",
+                World.Procedural ? "true" : "false",
+                World.Networked ? "true" : "false"
+            };
+            var saveInProgress = SaveRestore.IsSaving;
+            var saveTimings = CaptureSaveTimings();
+            var saveEntityCount = entityCount;
 
-            ObserveNetworkBytesTotal("receive", bytesReceivedTotal, ref _lastNetworkBytesReceived);
-            ObserveNetworkBytesTotal("send", bytesSentTotal, ref _lastNetworkBytesSent);
+            if (RconProfiler.mode < 1)
+            {
+                RconProfiler.mode = 1;
+            }
 
-            _networkPacketLossRatio.Set(ToPacketLossRatio(packetLossLastSecond));
+            var rconStats = RconProfiler.GetCurrentStats(false);
+            var rconConnectionCount = rconStats.ConnectionCount;
+            var rconMessageCount = rconStats.MessageCount;
+            var rconFailedConnectionCount = rconStats.FailedConnectionCount;
+            var rconBanCount = GetRconBanCount();
 
-            _players.WithLabels("connected").Set(BasePlayer.activePlayerList.Count);
-            _players.WithLabels("sleeping").Set(BasePlayer.sleepingPlayerList.Count);
-            _players.WithLabels("bots").Set(BasePlayer.bots.Count);
-            _players.WithLabels("joining").Set(ServerMgr.Instance?.connectionQueue?.Joining ?? 0);
-            _players.WithLabels("queued").Set(ServerMgr.Instance?.connectionQueue?.Queued ?? 0);
-            _players.WithLabels("receiving_snapshot").Set(CountReceivingSnapshotPlayers(out var totalSnapshotQueueDepth, out var maxSnapshotQueueDepth));
-            _snapshotQueueDepth.WithLabels("sum").Set(totalSnapshotQueueDepth);
-            _snapshotQueueDepth.WithLabels("max").Set(maxSnapshotQueueDepth);
+            CaptureEacStatus(out var eacPending, out var eacLocalOk, out var eacRemoteOk);
 
-            _connectionQueueDepth.WithLabels("reserved").Set(ServerMgr.Instance?.connectionQueue?.ReservedCount ?? 0);
-            _connectionQueueDepth.WithLabels("joining").Set(ServerMgr.Instance?.connectionQueue?.Joining ?? 0);
-            _connectionQueueDepth.WithLabels("queued").Set(ServerMgr.Instance?.connectionQueue?.Queued ?? 0);
+            EnqueueLatestMetricUpdate("server_snapshot", () => RunCollector("server_snapshot", () =>
+            {
+                _serverFramesPerSecond.WithLabels("instant").Set(current.frameRate);
+                _serverFramesPerSecond.WithLabels("average").Set(current.frameRateAverage);
+                _serverFrametimeSeconds.WithLabels("instant").Set(current.frameTime / 1000d);
+                _serverFrametimeSeconds.WithLabels("average").Set(current.frameTimeAverage / 1000d);
+                _memoryUsedBytes.Set(memoryUsedBytes);
+                _connections.Set(connectionCount);
 
-            _entitiesCount.Set(BaseNetworkable.serverEntities?.Count ?? 0);
-            _networkQueueDepth.WithLabels("read").Set(((BaseNetwork)Net.sv).ReadQueueLength);
-            _networkQueueDepth.WithLabels("write").Set(((BaseNetwork)Net.sv).WriteQueueLength);
-            _networkQueueDepth.WithLabels("decrypt").Set(((BaseNetwork)Net.sv).DecryptQueueLength);
-            _networkQueueBytes.WithLabels("read").Set(((BaseNetwork)Net.sv).ReadQueueBytes);
-            _networkQueueBytes.WithLabels("write").Set(((BaseNetwork)Net.sv).WriteQueueBytes);
-            _networkQueueBytes.WithLabels("decrypt").Set(((BaseNetwork)Net.sv).DecryptQueueBytes);
+                ObserveGcCollections(current.memoryCollections);
 
-            _runtimePhaseSeconds.WithLabels("servermgr_update").Set(RuntimeProfiler.ServerMgr_Update.TotalSeconds);
-            _runtimePhaseSeconds.WithLabels("net_cycle").Set(RuntimeProfiler.Net_Cycle.TotalSeconds);
-            _runtimePhaseSeconds.WithLabels("physics_sync").Set(RuntimeProfiler.Physics_SyncTransforms.TotalSeconds);
-            _runtimePhaseSeconds.WithLabels("companion_tick").Set(RuntimeProfiler.Companion_Tick.TotalSeconds);
-            _runtimePhaseSeconds.WithLabels("baseplayer_tick").Set(RuntimeProfiler.BasePlayer_ServerCycle.TotalSeconds);
+                _taskQueueDepth.WithLabels("load_balancer").Set(current.loadBalancerTasks);
+                _taskQueueDepth.WithLabels("invoke_handler").Set(current.invokeHandlerTasks);
+                _taskQueueDepth.WithLabels("workshop_skins_queue").Set(current.workshopSkinsQueued);
 
-            _aiThinkQueueDepth.WithLabels("human").Set(AIThinkManager._processQueue.Count);
-            _aiThinkQueueDepth.WithLabels("animal").Set(AIThinkManager._animalProcessQueue.Count);
-            _aiThinkQueueDepth.WithLabels("pets").Set(AIThinkManager._petProcessQueue.Count);
-            _aiThinkBudgetSeconds.WithLabels("human").Set(AIThinkManager.framebudgetms / 1000d);
-            _aiThinkBudgetSeconds.WithLabels("animal").Set(AIThinkManager.animalframebudgetms / 1000d);
-            _aiThinkBudgetSeconds.WithLabels("pets").Set(AIThinkManager.petframebudgetms / 1000d);
+                ObserveNetworkBytesTotal("receive", bytesReceivedTotal, ref _lastNetworkBytesReceived);
+                ObserveNetworkBytesTotal("send", bytesSentTotal, ref _lastNetworkBytesSent);
 
-            _loadBalancerDepth.Set(LoadBalancer.Count());
-            _loadBalancerPaused.Set(LoadBalancer.Paused ? 1 : 0);
-            _globalNetworkEntitiesCount.Set(GlobalNetworkHandler.server?.serverData?.Count ?? 0);
-            _globalNetworkConnections.Set(CountGlobalNetworkConnections(connections));
-            _animalsTotal.Set(AnimalBrain.Count);
+                _networkPacketLossRatio.Set(ToPacketLossRatio(packetLossLastSecond));
 
-            UpdateWipeMetrics();
-            UpdateSaveMetrics();
-            UpdateRconMetrics();
-            UpdateEacMetrics();
-        });
+                _players.WithLabels("connected").Set(connectedPlayers);
+                _players.WithLabels("sleeping").Set(sleepingPlayers);
+                _players.WithLabels("bots").Set(botPlayers);
+                _players.WithLabels("joining").Set(joiningPlayers);
+                _players.WithLabels("queued").Set(queuedPlayers);
+                _players.WithLabels("receiving_snapshot").Set(receivingSnapshotPlayers);
+                _snapshotQueueDepth.WithLabels("sum").Set(totalSnapshotQueueDepth);
+                _snapshotQueueDepth.WithLabels("max").Set(maxSnapshotQueueDepth);
+
+                _connectionQueueDepth.WithLabels("reserved").Set(reservedConnections);
+                _connectionQueueDepth.WithLabels("joining").Set(joiningPlayers);
+                _connectionQueueDepth.WithLabels("queued").Set(queuedPlayers);
+
+                _entitiesCount.Set(entityCount);
+                _networkQueueDepth.WithLabels("read").Set(networkReadQueueLength);
+                _networkQueueDepth.WithLabels("write").Set(networkWriteQueueLength);
+                _networkQueueDepth.WithLabels("decrypt").Set(networkDecryptQueueLength);
+                _networkQueueBytes.WithLabels("read").Set(networkReadQueueBytes);
+                _networkQueueBytes.WithLabels("write").Set(networkWriteQueueBytes);
+                _networkQueueBytes.WithLabels("decrypt").Set(networkDecryptQueueBytes);
+
+                _runtimePhaseSeconds.WithLabels("servermgr_update").Set(serverMgrUpdateSeconds);
+                _runtimePhaseSeconds.WithLabels("net_cycle").Set(netCycleSeconds);
+                _runtimePhaseSeconds.WithLabels("physics_sync").Set(physicsSyncSeconds);
+                _runtimePhaseSeconds.WithLabels("companion_tick").Set(companionTickSeconds);
+                _runtimePhaseSeconds.WithLabels("baseplayer_tick").Set(basePlayerTickSeconds);
+
+                _aiThinkQueueDepth.WithLabels("human").Set(humanAiQueueDepth);
+                _aiThinkQueueDepth.WithLabels("animal").Set(animalAiQueueDepth);
+                _aiThinkQueueDepth.WithLabels("pets").Set(petAiQueueDepth);
+                _aiThinkBudgetSeconds.WithLabels("human").Set(humanAiBudgetSeconds);
+                _aiThinkBudgetSeconds.WithLabels("animal").Set(animalAiBudgetSeconds);
+                _aiThinkBudgetSeconds.WithLabels("pets").Set(petAiBudgetSeconds);
+
+                _loadBalancerDepth.Set(loadBalancerDepth);
+                _loadBalancerPaused.Set(loadBalancerPaused);
+                _globalNetworkEntitiesCount.Set(globalNetworkEntityCount);
+                _globalNetworkConnections.Set(globalNetworkConnectionCount);
+                _animalsTotal.Set(animalCount);
+
+                ApplyWipeMetrics(wipeInfoLabelValues, wipeTimeRemainingSeconds);
+                ApplySaveMetrics(saveInProgress, saveTimings, saveEntityCount);
+                ApplyRconMetrics(rconConnectionCount, rconMessageCount, rconFailedConnectionCount, rconBanCount);
+                ApplyEacMetrics(eacPending, eacLocalOk, eacRemoteOk);
+            }));
+        }
+        catch (Exception ex)
+        {
+            EnqueueCollectorError("server_snapshot", ex);
+        }
     }
 
     private void PollHookSnapshots()
@@ -583,21 +713,28 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        var pluginMetrics = new Dictionary<string, double>(StringComparer.Ordinal);
-        foreach (var plugin in Community.Runtime.Plugins.Plugins)
+        try
         {
-            pluginMetrics[plugin.Name] = plugin.TotalHookTime.TotalSeconds;
+            var pluginMetrics = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var plugin in Community.Runtime.Plugins.Plugins)
+            {
+                pluginMetrics[plugin.Name] = plugin.TotalHookTime.TotalSeconds;
+            }
+
+            OnOxidePluginMetrics(pluginMetrics);
+
+            var moduleMetrics = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var module in Community.Runtime.ModuleProcessor.Modules)
+            {
+                moduleMetrics[module.Name] = module.TotalHookTime.TotalSeconds;
+            }
+
+            OnCarbonModuleMetrics(moduleMetrics);
         }
-
-        OnOxidePluginMetrics(pluginMetrics);
-
-        var moduleMetrics = new Dictionary<string, double>(StringComparer.Ordinal);
-        foreach (var module in Community.Runtime.ModuleProcessor.Modules)
+        catch (Exception ex)
         {
-            moduleMetrics[module.Name] = module.TotalHookTime.TotalSeconds;
+            EnqueueCollectorError("hook_snapshot", ex);
         }
-
-        OnCarbonModuleMetrics(moduleMetrics);
     }
 
     private void SyncActivePlayers()
@@ -632,26 +769,35 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             {
                 _playerStatsActions.Remove(userId);
                 _perfReportDelayCounter.Remove(userId);
-                _playerObservations.Remove(userId);
+                var disconnectedUserId = userId;
+                EnqueueMetricUpdate(() => _playerObservations.Remove(disconnectedUserId));
             }
         }
     }
 
-    internal void ObserveTimedMetric(TimedMetricKind kind, TimedMetricLabels labels, double durationSeconds)
+    internal void ObserveTimedMetric<TKey>(TimedMetricKind kind, TKey key, Func<TKey, TimedMetricLabels> labelSelector, double durationSeconds)
     {
-        if (!Ready || durationSeconds < 0 || !_timedFamilies.TryGetValue(kind, out var family))
+        if (!Ready || durationSeconds < 0 || labelSelector == null)
         {
             return;
         }
 
-        try
+        EnqueueMetricUpdate(() =>
         {
-            family.Observe(labels, durationSeconds, DateTime.UtcNow);
-        }
-        catch (Exception ex)
-        {
-            RecordCollectorError("timed_" + kind.ToString().ToLowerInvariant(), ex);
-        }
+            if (!_timedFamilies.TryGetValue(kind, out var family))
+            {
+                return;
+            }
+
+            try
+            {
+                family.Observe(labelSelector(key), durationSeconds, DateTime.UtcNow);
+            }
+            catch (Exception ex)
+            {
+                RecordCollectorError("timed_" + kind.ToString().ToLowerInvariant(), ex);
+            }
+        });
     }
 
     private void GatherPlayerSecondStats(BasePlayer player)
@@ -661,7 +807,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("player_snapshot", () =>
+        try
         {
             if (!player.IsReceivingSnapshot)
             {
@@ -681,17 +827,27 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             var pingSeconds = Math.Max(0, Net.sv.GetAveragePing(connection)) / 1000d;
             var packetLossRatio = ToPacketLossRatio(Net.sv.GetStat(connection, BaseNetwork.StatTypeLong.PacketLossLastSecond));
             var nowUtc = DateTime.UtcNow;
+            var userId = player.userID;
+            var playerName = player.displayName;
+            var playerIp = SanitizeIpAddress(connection.ipaddress);
 
-            _playerPingSeconds.Observe(pingSeconds);
-            _playerPacketLossRatio.Observe(packetLossRatio);
-            _playerObservations.UpdateNetworkSample(
-                player.userID,
-                player.displayName,
-                SanitizeIpAddress(connection.ipaddress),
-                pingSeconds,
-                packetLossRatio,
-                nowUtc);
-        });
+            EnqueueMetricUpdate(() => RunCollector("player_snapshot", () =>
+            {
+                _playerPingSeconds.Observe(pingSeconds);
+                _playerPacketLossRatio.Observe(packetLossRatio);
+                _playerObservations.UpdateNetworkSample(
+                    userId,
+                    playerName,
+                    playerIp,
+                    pingSeconds,
+                    packetLossRatio,
+                    nowUtc);
+            }));
+        }
+        catch (Exception ex)
+        {
+            EnqueueCollectorError("player_snapshot", ex);
+        }
     }
 
     private void UpdatePlayerAggregateMetrics()
@@ -701,36 +857,39 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        var snapshot = _playerObservations.CreateSnapshot(
-            DateTime.UtcNow,
-            Configuration.MetricExpiry,
-            Configuration.HighPingThresholdsMs,
-            Configuration.LowFpsThresholds,
-            Configuration.HighPacketLossRatio);
-
-        _lastPlayerAggregateSnapshot = snapshot;
-
-        foreach (var label in _knownPlayerConditionLabels.Except(snapshot.ConditionCount.Keys).ToArray())
+        EnqueueLatestMetricUpdate("player_aggregate", () => RunCollector("player_aggregate", () =>
         {
-            _playersConditionCount.WithLabels(label).Set(0);
-        }
+            var snapshot = _playerObservations.CreateSnapshot(
+                DateTime.UtcNow,
+                Configuration.MetricExpiry,
+                Configuration.HighPingThresholdsMs,
+                Configuration.LowFpsThresholds,
+                Configuration.HighPacketLossRatio);
 
-        foreach (var item in snapshot.ConditionCount)
-        {
-            _knownPlayerConditionLabels.Add(item.Key);
-            _playersConditionCount.WithLabels(item.Key).Set(item.Value);
-        }
+            _lastPlayerAggregateSnapshot = snapshot;
 
-        foreach (var kind in _knownPlayerPopulationKinds.Except(snapshot.Population.Keys).ToArray())
-        {
-            _playerObservationPopulation.WithLabels(kind).Set(0);
-        }
+            foreach (var label in _knownPlayerConditionLabels.Except(snapshot.ConditionCount.Keys).ToArray())
+            {
+                _playersConditionCount.WithLabels(label).Set(0);
+            }
 
-        foreach (var item in snapshot.Population)
-        {
-            _knownPlayerPopulationKinds.Add(item.Key);
-            _playerObservationPopulation.WithLabels(item.Key).Set(item.Value);
-        }
+            foreach (var item in snapshot.ConditionCount)
+            {
+                _knownPlayerConditionLabels.Add(item.Key);
+                _playersConditionCount.WithLabels(item.Key).Set(item.Value);
+            }
+
+            foreach (var kind in _knownPlayerPopulationKinds.Except(snapshot.Population.Keys).ToArray())
+            {
+                _playerObservationPopulation.WithLabels(kind).Set(0);
+            }
+
+            foreach (var item in snapshot.Population)
+            {
+                _knownPlayerPopulationKinds.Add(item.Key);
+                _playerObservationPopulation.WithLabels(item.Key).Set(item.Value);
+            }
+        }));
     }
 
     private void CleanupExpiredSeries()
@@ -740,7 +899,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("series_cleanup", () =>
+        EnqueueLatestMetricUpdate("series_cleanup", () => RunCollector("series_cleanup", () =>
         {
             var cutoffUtc = DateTime.UtcNow - Configuration.MetricExpiry;
 
@@ -755,7 +914,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
 
             CleanupRawTotalCache(_lastPluginHookSeconds, _pluginLastSeenUtc, cutoffUtc);
             CleanupRawTotalCache(_lastModuleHookSeconds, _moduleLastSeenUtc, cutoffUtc);
-        });
+        }));
     }
 
     private void CleanupRawTotalCache(Dictionary<string, double> totals, Dictionary<string, DateTime> lastSeenUtc, DateTime cutoffUtc)
@@ -770,6 +929,21 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             lastSeenUtc.Remove(key);
             totals.Remove(key);
         }
+    }
+
+    private void EnqueueMetricUpdate(Action action)
+    {
+        _metricsWorker?.Enqueue(action);
+    }
+
+    private void EnqueueLatestMetricUpdate(string key, Action action)
+    {
+        _metricsWorker?.EnqueueLatest(key, action);
+    }
+
+    private void EnqueueCollectorError(string collector, Exception ex)
+    {
+        EnqueueMetricUpdate(() => RecordCollectorError(collector, ex));
     }
 
     private void RunCollector(string collector, Action action)
@@ -894,23 +1068,12 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         return count;
     }
 
-    private void UpdateWipeMetrics()
+    private void ApplyWipeMetrics(string[] labelValues, double? wipeTimeRemainingSeconds)
     {
-        var wipeTimer = WipeTimer.serverinstance;
-        if (wipeTimer != null)
+        if (wipeTimeRemainingSeconds.HasValue)
         {
-            _wipeTimeRemainingSeconds.Set(Math.Max(0d, wipeTimer.GetTimeSpanUntilWipe().TotalSeconds));
+            _wipeTimeRemainingSeconds.Set(wipeTimeRemainingSeconds.Value);
         }
-
-        var labelValues = new[]
-        {
-            World.Name ?? "unknown",
-            World.Size.ToString(CultureInfo.InvariantCulture),
-            World.Seed.ToString(CultureInfo.InvariantCulture),
-            SaveRestore.WipeId ?? "unknown",
-            World.Procedural ? "true" : "false",
-            World.Networked ? "true" : "false"
-        };
 
         if (_currentWipeInfoLabelValues != null)
         {
@@ -921,12 +1084,33 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         _wipeInfo.WithLabels(labelValues).Set(1);
     }
 
-    private void UpdateSaveMetrics()
+    private Dictionary<string, int> CaptureSaveTimings()
     {
-        _saveInProgress.Set(SaveRestore.IsSaving ? 1 : 0);
+        var saveTimings = new Dictionary<string, int>(StringComparer.Ordinal);
 
         var pendingTimings = SaveTimingField?.GetValue(PerformanceLogging.server) as Dictionary<string, int>;
         if (pendingTimings == null || pendingTimings.Count == 0)
+        {
+            return saveTimings;
+        }
+
+        foreach (var phase in SavePhases)
+        {
+            var key = "save." + phase;
+            if (pendingTimings.TryGetValue(key, out var milliseconds))
+            {
+                saveTimings[key] = milliseconds;
+            }
+        }
+
+        return saveTimings;
+    }
+
+    private void ApplySaveMetrics(bool saveInProgress, Dictionary<string, int> saveTimings, int saveEntitiesCount)
+    {
+        _saveInProgress.Set(saveInProgress ? 1 : 0);
+
+        if (saveTimings == null || saveTimings.Count == 0)
         {
             return;
         }
@@ -935,7 +1119,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         foreach (var phase in SavePhases)
         {
             var key = "save." + phase;
-            if (!pendingTimings.TryGetValue(key, out var milliseconds))
+            if (!saveTimings.TryGetValue(key, out var milliseconds))
             {
                 continue;
             }
@@ -952,23 +1136,62 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         if (changed)
         {
             _exporterLastSaveTimestampSeconds.Set(DateTimeOffset.UtcNow.ToUnixTimeSeconds());
-            _saveEntitiesCount.Set(BaseNetworkable.serverEntities?.Count ?? 0);
+            _saveEntitiesCount.Set(saveEntitiesCount);
         }
     }
 
-    private void UpdateRconMetrics()
+    private void ApplyRconMetrics(int connectionCount, long messageCount, long failedConnectionCount, double bannedAddressCount)
     {
-        if (RconProfiler.mode < 1)
+        _rconClients.Set(connectionCount);
+
+        ObserveMonotonicCounter(_rconMessagesTotal, ref _lastRconMessageCount, messageCount);
+        ObserveMonotonicCounter(_rconFailedAuthTotal, ref _lastRconFailedAuthCount, failedConnectionCount);
+        _rconBannedAddresses.Set(bannedAddressCount);
+    }
+
+    private static void CaptureEacStatus(out int pending, out int localOk, out int remoteOk)
+    {
+        pending = 0;
+        localOk = 0;
+        remoteOk = 0;
+        var statuses = EacConnectionStatusField?.GetValue(null) as IEnumerable;
+        if (statuses == null)
         {
-            RconProfiler.mode = 1;
+            return;
         }
 
-        var stats = RconProfiler.GetCurrentStats(false);
-        _rconClients.Set(stats.ConnectionCount);
+        foreach (var item in statuses)
+        {
+            var valueProperty = item.GetType().GetProperty("Value");
+            if (valueProperty == null)
+            {
+                continue;
+            }
 
-        ObserveMonotonicCounter(_rconMessagesTotal, ref _lastRconMessageCount, stats.MessageCount);
-        ObserveMonotonicCounter(_rconFailedAuthTotal, ref _lastRconFailedAuthCount, stats.FailedConnectionCount);
-        _rconBannedAddresses.Set(GetRconBanCount());
+            var raw = Convert.ToInt32(valueProperty.GetValue(item), CultureInfo.InvariantCulture);
+            switch (raw)
+            {
+                case 0:
+                    pending++;
+                    break;
+                case 1:
+                    localOk++;
+                    break;
+                case 2:
+                    remoteOk++;
+                    break;
+            }
+        }
+    }
+
+    private void ApplyEacMetrics(int pending, int localOk, int remoteOk)
+    {
+        _eacAuthStatus.WithLabels("pending").Set(0);
+        _eacAuthStatus.WithLabels("local_ok").Set(0);
+        _eacAuthStatus.WithLabels("remote_ok").Set(0);
+        _eacAuthStatus.WithLabels("pending").Set(pending);
+        _eacAuthStatus.WithLabels("local_ok").Set(localOk);
+        _eacAuthStatus.WithLabels("remote_ok").Set(remoteOk);
     }
 
     private static double GetRconBanCount()
@@ -1004,50 +1227,6 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         return total;
     }
 
-    private void UpdateEacMetrics()
-    {
-        _eacAuthStatus.WithLabels("pending").Set(0);
-        _eacAuthStatus.WithLabels("local_ok").Set(0);
-        _eacAuthStatus.WithLabels("remote_ok").Set(0);
-
-        var statuses = EacConnectionStatusField?.GetValue(null) as IEnumerable;
-        if (statuses == null)
-        {
-            return;
-        }
-
-        var pending = 0;
-        var localOk = 0;
-        var remoteOk = 0;
-
-        foreach (var item in statuses)
-        {
-            var valueProperty = item.GetType().GetProperty("Value");
-            if (valueProperty == null)
-            {
-                continue;
-            }
-
-            var raw = Convert.ToInt32(valueProperty.GetValue(item), CultureInfo.InvariantCulture);
-            switch (raw)
-            {
-                case 0:
-                    pending++;
-                    break;
-                case 1:
-                    localOk++;
-                    break;
-                case 2:
-                    remoteOk++;
-                    break;
-            }
-        }
-
-        _eacAuthStatus.WithLabels("pending").Set(pending);
-        _eacAuthStatus.WithLabels("local_ok").Set(localOk);
-        _eacAuthStatus.WithLabels("remote_ok").Set(remoteOk);
-    }
-
     private void PollWorkQueueMetrics()
     {
         if (!Ready)
@@ -1055,26 +1234,41 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("work_queue_snapshot", () =>
+        try
         {
-            foreach (var label in WorkQueueLabels)
-            {
-                _workQueueDepth.WithLabels(label).Set(0);
-            }
+            var samples = new List<WorkQueueMetricSample>();
 
             foreach (var queue in ObjectWorkQueue.All)
             {
-                UpdateWorkQueueMetric(queue.Name, queue.QueueLength, queue.TotalExecutionTime.TotalSeconds);
+                CaptureWorkQueueMetric(samples, queue.Name, queue.QueueLength, queue.TotalExecutionTime.TotalSeconds);
             }
 
             foreach (var queue in PersistentObjectWorkQueue.All)
             {
-                UpdateWorkQueueMetric(queue.Name, queue.ListLength, queue.TotalExecutionTime.TotalSeconds);
+                CaptureWorkQueueMetric(samples, queue.Name, queue.ListLength, queue.TotalExecutionTime.TotalSeconds);
             }
-        });
+
+            var snapshot = samples.ToArray();
+            EnqueueLatestMetricUpdate("work_queue_snapshot", () => RunCollector("work_queue_snapshot", () =>
+            {
+                foreach (var label in WorkQueueLabels)
+                {
+                    _workQueueDepth.WithLabels(label).Set(0);
+                }
+
+                foreach (var item in snapshot)
+                {
+                    ApplyWorkQueueMetric(item.Label, item.Depth, item.TotalExecutionSeconds);
+                }
+            }));
+        }
+        catch (Exception ex)
+        {
+            EnqueueCollectorError("work_queue_snapshot", ex);
+        }
     }
 
-    private void UpdateWorkQueueMetric(string queueName, int depth, double totalExecutionSeconds)
+    private static void CaptureWorkQueueMetric(List<WorkQueueMetricSample> samples, string queueName, int depth, double totalExecutionSeconds)
     {
         var label = ResolveWorkQueueLabel(queueName);
         if (label == null)
@@ -1082,6 +1276,11 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
+        samples.Add(new WorkQueueMetricSample(label, depth, totalExecutionSeconds));
+    }
+
+    private void ApplyWorkQueueMetric(string label, int depth, double totalExecutionSeconds)
+    {
         _workQueueDepth.WithLabels(label).Set(depth);
 
         if (_lastWorkQueueExecutionSeconds.TryGetValue(label, out var previous))
@@ -1121,7 +1320,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             return;
         }
 
-        RunCollector("world_state", () =>
+        try
         {
             var cargoShipCount = 0;
             double cargoShipTimeRemainingSeconds = 0;
@@ -1163,19 +1362,30 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
                 }
             }
 
-            _eventActive.WithLabels("patrol_heli").Set(PatrolHelicopterAI.heliInstance != null ? 1 : 0);
-            _eventActive.WithLabels("travelling_vendor").Set(TravellingVendorEvent.currentVendor != null ? 1 : 0);
-            _eventActive.WithLabels("cargo_ship").Set(cargoShipCount > 0 ? 1 : 0);
-            _eventActive.WithLabels("road_bradleys").Set(RoadBradleys.StaticBradleyCount > 0 ? 1 : 0);
+            var patrolHeliActive = PatrolHelicopterAI.heliInstance != null ? 1 : 0;
+            var travellingVendorActive = TravellingVendorEvent.currentVendor != null ? 1 : 0;
+            var roadBradleyCount = RoadBradleys.StaticBradleyCount;
 
-            _eventCount.WithLabels("cargo_ship").Set(cargoShipCount);
-            _eventCount.WithLabels("road_bradleys").Set(RoadBradleys.StaticBradleyCount);
+            EnqueueLatestMetricUpdate("world_state", () => RunCollector("world_state", () =>
+            {
+                _eventActive.WithLabels("patrol_heli").Set(patrolHeliActive);
+                _eventActive.WithLabels("travelling_vendor").Set(travellingVendorActive);
+                _eventActive.WithLabels("cargo_ship").Set(cargoShipCount > 0 ? 1 : 0);
+                _eventActive.WithLabels("road_bradleys").Set(roadBradleyCount > 0 ? 1 : 0);
 
-            _cargoShipTimeRemainingSeconds.Set(Math.Max(0d, cargoShipTimeRemainingSeconds));
-            _cargoShipDockCount.Set(cargoShipDockCount);
-            _hackableCrates.WithLabels("hacking").Set(hackingCrates);
-            _hackableCrates.WithLabels("fully_hacked").Set(fullyHackedCrates);
-        });
+                _eventCount.WithLabels("cargo_ship").Set(cargoShipCount);
+                _eventCount.WithLabels("road_bradleys").Set(roadBradleyCount);
+
+                _cargoShipTimeRemainingSeconds.Set(Math.Max(0d, cargoShipTimeRemainingSeconds));
+                _cargoShipDockCount.Set(cargoShipDockCount);
+                _hackableCrates.WithLabels("hacking").Set(hackingCrates);
+                _hackableCrates.WithLabels("fully_hacked").Set(fullyHackedCrates);
+            }));
+        }
+        catch (Exception ex)
+        {
+            EnqueueCollectorError("world_state", ex);
+        }
     }
 
     private void ObserveMonotonicCounter(Counter counter, ref long lastValue, long currentValue)
@@ -1484,6 +1694,9 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         CreateCoreMetrics();
         CreateTimedMetrics();
         PublishBuildInfo();
+
+        _metricsWorker = new MetricsWorker();
+        _metricsWorker.Start();
     }
 
     private void CreateExporterMetrics()
@@ -1841,7 +2054,6 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
     {
         CancelInvoke();
         InvokeRepeating(nameof(CleanupExpiredSeries), UnityEngine.Random.Range(5f, 10f), 60f);
-        InvokeRepeating(nameof(PollServerSnapshot), UnityEngine.Random.Range(0.5f, 1.5f), 1f);
         InvokeRepeating(nameof(PollHookSnapshots), UnityEngine.Random.Range(0.5f, 1.5f), 1f);
         InvokeRepeating(nameof(PollWorldStateMetrics), UnityEngine.Random.Range(1f, 2f), 5f);
         InvokeRepeating(nameof(PollWorkQueueMetrics), UnityEngine.Random.Range(1f, 2f), 5f);
@@ -1862,6 +2074,9 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         {
             BasePlayer.FindByID(item.Key)?.CancelInvoke(item.Value);
         }
+
+        _metricsWorker?.Stop();
+        _metricsWorker = null;
 
         _playerStatsActions.Clear();
         _perfReportDelayCounter.Clear();
@@ -1959,7 +2174,12 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             $"Prometheus bind: {Configuration?.PrometheusListenHost}:{Configuration?.PrometheusListenPort}{Configuration?.PrometheusMetricsPath}",
             $"Debug endpoint enabled: {Configuration?.DebugEndpointEnabled ?? false}",
             $"Debug endpoint running: {_debugEndpointHost?.IsRunning ?? false}",
-            $"Tracked players: {_playerStatsActions.Count}"
+            $"Tracked players: {_playerStatsActions.Count}",
+            $"Metrics worker running: {_metricsWorker?.IsRunning ?? false}",
+            $"Metrics worker queued: {_metricsWorker?.QueuedCount ?? 0}",
+            $"Metrics worker coalesced: {_metricsWorker?.CoalescedCount ?? 0}",
+            $"Metrics worker dropped: {_metricsWorker?.DroppedCount ?? 0}",
+            $"Metrics worker faults: {_metricsWorker?.FaultedCount ?? 0}"
         };
 
         arg.ReplyWith(string.Join(Environment.NewLine, lines));

@@ -22,6 +22,6 @@ internal sealed class MetricsTimeStorage<TKey>
             return;
         }
 
-        logger.ObserveTimedMetric(_kind, _labelSelector(key), milliseconds / 1000d);
+        logger.ObserveTimedMetric(_kind, key, _labelSelector, milliseconds / 1000d);
     }
 }
