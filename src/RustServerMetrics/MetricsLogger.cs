@@ -520,7 +520,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
         var playerId = TryParsePlayerId(clientPerformanceReport.user_id);
         var player = playerId.HasValue ? BasePlayer.FindByID(playerId.Value) : null;
         var playerName = player?.displayName ?? string.Empty;
-        var playerIp = SanitizeIpAddress(player?.net?.connection?.ipaddress);
+        var playerIp = SanitizeIpAddress(player?.net?.connection?.IPAddressWithoutPort());
 
         EnqueueMetricUpdate(() => RunCollector("client_performance", () =>
         {
@@ -829,7 +829,7 @@ public sealed class MetricsLogger : SingletonComponent<MetricsLogger>
             var nowUtc = DateTime.UtcNow;
             var userId = player.userID;
             var playerName = player.displayName;
-            var playerIp = SanitizeIpAddress(connection.ipaddress);
+            var playerIp = SanitizeIpAddress(connection.IPAddressWithoutPort());
 
             EnqueueMetricUpdate(() => RunCollector("player_snapshot", () =>
             {
